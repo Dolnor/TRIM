@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# TRIM support for non-Apple SSDs
+#
+if [[ `perl -le "print scalar grep /\x41\x50\x50\x4c\x45\x20\x53\x53\x44/, <>;" "/System/Library/Extensions/IOAHCIFamily.kext/Contents/PlugIns/IOAHCIBlockStorage.kext/Contents/MacOS/IOAHCIBlockStorage"` > 0 ]]; then
+	echo "patching IOAHCIBlockStorage for TRIM support"
+    perl -pi -e 's|\x41\x50\x50\x4c\x45\x20\x53\x53\x44|\x00\x00\x00\x00\x00\x00\x00\x00\x00|g' "/System/Library/Extensions/IOAHCIFamily.kext/Contents/PlugIns/IOAHCIBlockStorage.kext/Contents/MacOS/IOAHCIBlockStorage"
+	echo "binary patching complete"
+    touch "/System/Library/Extensions"
+	echo "touched kernel extensions folder to trigger cache rebuild"
+else
+	echo "TRIM already supported"
+fi

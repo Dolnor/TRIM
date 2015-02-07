@@ -1,0 +1,51 @@
+#!/bin/bash
+#####################################################
+# Purpose: run scripts in /etc/rc.boot.d /w .local ext
+#####################################################
+
+base_rc_dir=/etc
+
+####################################################
+# Tail daemon log, keeping at least 80 lines
+####################################################
+function tail_log {
+
+daemon_log="/Library/Logs/TRIM/trim.daemon.log"
+if [[ -f "$daemon_log" ]]; then
+    tail -n 80 "$daemon_log" > "$daemon_log".tmp
+	cat "$daemon_log".tmp > "$daemon_log"
+	rm -f "$daemon_log".tmp
+fi
+
+}
+####################################################
+# Run executables scripts from rc.boot.d
+####################################################
+function execute_scripts {   
+	 
+rc_dir="${base_rc_dir}/rc.boot.d"
+if [[ -d "$rc_dir" ]]; then
+	# trim whitespace from IFS
+	IFS="$(printf '\n\t')"
+	for script in "$rc_dir"/*.local; do
+		# if script not a dir and is exec - run it
+		if [[ ! -d "$script" && -x "$script" ]]; then
+			echo ">> Starting: ${script}"
+			$script
+			echo ">> Complete: ${script}"
+			echo
+		fi
+	done
+fi
+    
+}
+####################################################
+# MAIN
+####################################################
+
+echo "----------------------------------------------"
+echo "daemon started - $(date "+%Y-%m-%d %T")"
+echo "----------------------------------------------"
+
+tail_log
+execute_scripts
